@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import remarkBreaks from 'remark-breaks';
 
 export default function textGen() {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const [chatResponse, setChatResponse] = useState('')
 
     async function initiateChat(formData: FormData){
