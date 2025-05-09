@@ -1,75 +1,29 @@
-import { GoogleGenAI } from '@google/genai'
+'use client'
 import { Angry, Bot, House, Paperclip, Send, Trash } from 'lucide-react'
 import React from 'react'
 export default function ChatBot() {
-
-    async function handleSend(formData: FormData) {
-        'use server'
-        const message = formData.get('message')?.toString()
-        const opt = formData.get('modeOpt')?.toString()
-        const file = formData.get('fileUpload')
-        const ai = new GoogleGenAI({
-            apiKey: process.env.GEMINI_API_KEY
-        })
-        const normalChat = ai.chats.create({
-            model: 'gemini-2.0-flash',
-            config: {
-                systemInstruction: [
-                    "Keep the messages upto the point and don't make them unnecessarily long.",
-                    "You are a personal assistant of a college student. Help him/her with their work.",
-                ]
-            }
-        })
-        const momChat = ai.chats.create({
-            model: 'gemini-2.0-flash',
-            config: {
-                systemInstruction: [
-                    "Keep the messages upto the point and don't make them unnecessarily long.",
-                    "You are a typical Indian mother that scolds your child in everything that he/she says. Your child is currently studying in college and needs help with college work.",
-                ]
-            }
-        })
-        const monkChat = ai.chats.create({
-            model: 'gemini-2.0-flash',
-            config: {
-                systemInstruction: [
-                    "Keep the messages upto the point and don't make them unnecessarily long.",
-                    "You are a japanese monk. You will be asked college questions because you know the answer of everthing."
-                ]
-            }
-        })
-        if(opt==='mom'){
-            const result = await momChat.sendMessage({message: `${message}`})
-            const response = result.text
-            console.log(response)
-        }
-        if(opt==='monk'){
-            const result = await monkChat.sendMessage({message: `${message}`})
-            const response = result.text
-            console.log(response)
-        }
-        if(opt==='normal'){
-            const result = await normalChat.sendMessage({message: `${message}`})
-            const response = result.text
-            console.log(response)
-        }
-        if(file && file instanceof File){
-            console.log(file.name)
-        }
-    }
 
     return (
         <>
             <div className='px-35 py-5'>
                 <div className='flex items-center justify-between'>
                     <div className='font-semibold text-3xl'>Study Assistant</div>
-                    <div className='flex items-center gap-3 border-2 border-[#D1D5DA] hover:bg-hoverp px-4 py-2 rounded-lg'>
+                    <div className='flex items-center gap-3 border-2 border-[#4941DA] bg-[#5a53db] hover:bg-[#4941DA] px-4 py-2 rounded-lg text-white'>
                         <Trash size={20} />
                         <span className=''>Clear Chat</span>
                     </div>
                 </div>
 
-                <form action={handleSend}>
+                <form onSubmit={async(e)=>{
+                    e.preventDefault()
+                    const formData = new FormData(e.currentTarget)
+                    const res = await fetch('/store/submit', {
+                        method: "POST",
+                        body: formData,
+                    })
+                    const response = await res.json()
+                    console.log('response:',response)
+                }}>
                     <div className='text-lg mt-5 font-medium'>Choose AI Personality</div>
                     <div className='flex items-center justify-between gap-5 mt-3 select-none'>
                         <div className='w-1/3 flex'>
