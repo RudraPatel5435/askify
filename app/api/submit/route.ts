@@ -40,43 +40,18 @@ export async function POST(req: Request) {
         tempContents = message
     }
 
-    if (opt === 'mom' && message && tempContents) {
+    if (tempContents) {
         const result = await ai.models.generateContent({
             model: "gemini-2.0-flash",
             contents: tempContents,
             config: {
                 systemInstruction: [
-                    personalities.all, personalities.mom
+                    personalities.all, personalities[opt as keyof typeof personalities]
                 ] 
             },
         });
         const response = result.text
         return NextResponse.json({ response })
     }
-    if (opt === 'monk' && message && tempContents) {
-        const result = await ai.models.generateContent({
-            model: "gemini-2.0-flash",
-            contents: tempContents,
-            config: {
-                systemInstruction: [
-                    personalities.all, personalities.monk
-                ] 
-            },
-        });
-        const response = result.text
-        return NextResponse.json({ response })
-    }
-    if (opt === 'normal' && message && tempContents) {
-        const result = await ai.models.generateContent({
-            model: "gemini-2.0-flash",
-            contents: tempContents,
-            config: {
-                systemInstruction: [
-                    personalities.all, personalities.normal
-                ] 
-            },
-        });
-        const response = result.text
-        return NextResponse.json({ response })
-    }
+
 }
