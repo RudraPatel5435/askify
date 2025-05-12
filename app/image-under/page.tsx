@@ -2,11 +2,11 @@ import React from 'react'
 import {
   GoogleGenAI,
   createUserContent,
-  createPartFromText,
+//   createPartFromText,
 } from "@google/genai";
-import fetch from 'node-fetch'
-import fs from 'fs'
-import path from 'path'
+// import fetch from 'node-fetch'
+// import fs from 'fs'
+// import path from 'path'
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 

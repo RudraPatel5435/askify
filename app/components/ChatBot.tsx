@@ -6,14 +6,16 @@ export default function ChatBot() {
 
     const [chatHistory, setChatHistory] = useState<ChatHistory>([])
     const [userMessage, setUserMessage] = useState<string>('')
+    const [fileUploaded, setFileUploaded] = useState<boolean>(false)
+    const [uploadedFile, setUploadedFile] = useState<string>('')
 
     const messageRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     const emojis = {
-        'mom': <Angry size={20} />,
-        'normal': <Bot size={20} />,
-        'monk': <House />
+        'mom': <Angry size={20} strokeWidth={2.5} />,
+        'normal': <Bot size={20} strokeWidth={2.5} />,
+        'monk': <House strokeWidth={2.5} />
     }
     const addChatHistory = (botType: 'mom' | 'monk' | 'normal' | null, botMess: string, userMess: string) => {
         setChatHistory(prev => [
@@ -33,7 +35,7 @@ export default function ChatBot() {
 
 
     const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setUserMessage(e.target.value)
+        setUserMessage(e.target.value.trimStart())
         const el = textareaRef.current
         if (el) {
             el.style.height = 'auto'
@@ -76,6 +78,8 @@ export default function ChatBot() {
                         const response = await res.json()
                         const mode = formData.get('modeOpt') as 'mom' | 'monk' | 'normal' | null
                         addChatHistory(mode, response.response, perUserMessage)
+                        setFileUploaded(false)
+                        setUploadedFile('')
                         // console.log('response:', response.response)
                     }
                 }}>
@@ -113,48 +117,82 @@ export default function ChatBot() {
                         </div>
                     </div>
 
-
-                    <div className='messageDiv flex flex-col gap-3 bg-[#F3F4F6] h-140 w-full mt-5 mb-5 rounded-lg p-5 font-medium overflow-y-scroll'>
-                        {
-                            chatHistory.map((blob, idx) => (
-                                <div key={idx} className={blob.role === 'user' ? 'flex gap-3 items-center bg-[#DFE7FF] px-4 py-2 rounded-xl w-fit self-end max-w-5/6' : 'flex items-center gap-3 bg-white px-4 py-2 rounded-xl w-fit max-w-5/6'}>
-                                    <div className={`p-2 rounded-full ${blob.role === 'user' ? 'hidden' : 'bg-[#E4E7EB]'}`}>
-                                        {blob.role !== 'user' && blob.mode && emojis[blob.mode as keyof typeof emojis]}
-                                    </div>
-                                    <div className=''>{blob.message}</div>
+                    {
+                        chatHistory.length === 0 ? (
+                            <div className='bg-[#F3F4F6] h-140 w-full mt-5 mb-5 rounded-lg flex items-center justify-center flex-col gap-3'>
+                                <div className='font-medium text-3xl'>
+                                    Start a conversation
                                 </div>
-                            ))
-                        }
-                        <div ref={messageRef} />
-                    </div>
-
-                    {/* <div className='font-medium'
-                    Start a conversation
-                </div>art a conversation
-                <div className='text-sm text-zinc-200'>
-                <divAsk me anything about your engineering studies, upload documents, or get help with notes.
-                 /  Ask me anything about your engineering studies, upload documents, or get help with notes.
-                </
-                    </div> */}
-
+                                <div className='text-md text-[#4B5563] text-center'>
+                                    Ask me anything about your engineering studies, upload<br /> documents, or get help with notes.
+                                </div>
+                            </div>
+                        )
+                            :
+                            (
+                                <div className='messageDiv flex flex-col gap-3 bg-[#F3F4F6] h-140 w-full mt-5 mb-5 rounded-lg p-5 overflow-y-scroll'>
+                                    {
+                                        chatHistory.map((blob, idx) => (
+                                            <div key={idx} className={blob.role === 'user' ? 'flex gap-3 items-center bg-[#DFE7FF] px-4 py-2 rounded-xl w-fit self-end max-w-5/6' : 'flex items-center gap-3 bg-white px-4 py-2 rounded-xl w-fit max-w-5/6'}>
+                                                <div className={`py-2 px-3 rounded-full flex items-center gap-2 ${blob.role === 'user' ? 'hidden' : 'bg-[#E4E7EB] font-medium'} ${blob.mode==='mom'? 'text-red-500': blob.mode==='monk' ? 'text-blue-500' : 'text-black'}`}>
+                                                    <div>{blob.role !== 'user' && blob.mode && emojis[blob.mode as keyof typeof emojis]}</div>
+                                                    <div>{blob.role !== 'user' && blob.mode && (blob.mode.charAt(0).toUpperCase() + blob.mode.slice(1))}</div>
+                                                </div>
+                                                <div className='whitespace-pre-wrap'>{blob.message}</div>
+                                            </div>
+                                        ))
+                                    }
+                                    <div ref={messageRef} />
+                                </div>
+                            )
+                    }
 
                     <hr className='text-[#E4E7EB]' />
                     <div className='flex items-center justify-between gap-5 mt-5'>
-                        <div className='cursor-pointer hover:bg-[#F3F4F6] p-5 rounded-lg flex items-center justify-center'>
-                            <input type='file' id='fileUpload' name='fileUpload' className='file:hidden' />
-                            <label htmlFor='fileUpload'><Paperclip className='cursor-pointer' /></label>
+                        <div>
+                            <input
+                                type='file'
+                                id='fileUpload'
+                                name='fileUpload'
+                                className='hidden'
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const file = e.target.files?.[0]
+                                    if (file) {
+                                        setFileUploaded(true)
+                                        setUploadedFile(file.name)
+                                        // console.log(file)
+                                    } else {
+                                        setFileUploaded(false)
+                                        setUploadedFile('')
+                                    }
+                                }}
+                            />
+                            <label htmlFor='fileUpload' className={`${fileUploaded ? 'bg-[#4941DA] text-white' : 'hover:bg-[#F3F4F6]'} cursor-pointer p-5 rounded-lg flex items-center justify-center`}>
+                                <Paperclip className='cursor-pointer' />
+                            </label>
                         </div>
 
-                        <textarea
-                            ref={textareaRef}
-                            value={userMessage}
-                            onChange={handleInput}
-                            name='message'
-                            placeholder='Type your message...'
-                            rows={1}
-                            className='w-full px-4 py-2 rounded-md border border-[#D1D5DA] outline-[#4941DA] resize-none overflow-scroll leading-6'
-                        ></textarea>
-                        <button type='submit' className={`${userMessage ? 'cursor-pointer bg-[#4F45E4]' : 'cursor-no-drop bg-[#4F45E4]/70'} text-white px-4 py-2 rounded-lg`}>
+                        <div className='w-full flex flex-col gap-1'>
+                            <div className={`${fileUploaded ? 'px-2 py-1 rounded-md bg-zinc-200 w-fit ' : 'hidden'}`}>
+                                {uploadedFile}
+                            </div>
+                            <textarea
+                                ref={textareaRef}
+                                value={userMessage}
+                                onChange={handleInput}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault()
+                                        e.currentTarget.form?.requestSubmit()
+                                    }
+                                }}
+                                name='message'
+                                placeholder='Type your message...'
+                                rows={1}
+                                className='w-full px-4 py-2 rounded-md border border-[#D1D5DA] outline-[#4941DA] resize-none overflow-scroll leading-6'
+                            ></textarea>
+                        </div>
+                        <button type='submit' className={`${userMessage ? 'cursor-pointer bg-[#4F45E4]' : 'cursor-no-drop bg-[#4F45E4]/70'} text-white p-4 rounded-lg`}>
                             <Send />
                         </button>
                     </div>
