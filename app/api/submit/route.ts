@@ -2,7 +2,6 @@
 import { GoogleGenAI } from "@google/genai"
 import { NextResponse } from "next/server"
 
-
 const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY
 })
@@ -21,7 +20,7 @@ export async function POST(req: Request) {
     const file = formData.get('fileUpload')
     let tempContents
 
-    if (file && file instanceof File) {
+    if ( file && file instanceof File && file.type!=='application/octet-stream') {
         const mime = file.type
         const arrayBuffer = await file.arrayBuffer()
         const base64 = Buffer.from(arrayBuffer).toString('base64')
@@ -41,35 +40,6 @@ export async function POST(req: Request) {
         tempContents = message
     }
 
-    // const normalChat = ai.chats.create({
-    //     model: 'gemini-2.0-flash',
-    //     config: {
-    //         systemInstruction: [
-    //             "Keep the messages upto the point and don't make them unnecessarily long.",
-    //             personalities.normal
-    //         ]
-    //     }
-    // })
-    // const momChat = ai.chats.create({
-    //     model: 'gemini-2.0-flash',
-    //     config: {
-    //         systemInstruction: [
-    //             "Keep the messages upto the point and don't make them unnecessarily long.",
-    //             personalities.mom
-    //         ]
-    //     }
-    // })
-    // const monkChat = ai.chats.create({
-    //     model: 'gemini-2.0-flash',
-    //     config: {
-    //         systemInstruction: [
-    //             "Keep the messages upto the point and don't make them unnecessarily long.",
-    //             personalities.monk
-    //         ]
-    //     }
-    // })
-
-
     if (opt === 'mom' && message && tempContents) {
         const result = await ai.models.generateContent({
             model: "gemini-2.0-flash",
@@ -80,7 +50,6 @@ export async function POST(req: Request) {
                 ] 
             },
         });
-        // const result = await momChat.sendMessage({ message: `${message}` })
         const response = result.text
         return NextResponse.json({ response })
     }
@@ -94,7 +63,6 @@ export async function POST(req: Request) {
                 ] 
             },
         });
-        // const result = await monkChat.sendMessage({ message: `${message}` })
         const response = result.text
         return NextResponse.json({ response })
     }
@@ -108,7 +76,6 @@ export async function POST(req: Request) {
                 ] 
             },
         });
-        // const result = await normalChat.sendMessage({ message: `${message}` })
         const response = result.text
         return NextResponse.json({ response })
     }
