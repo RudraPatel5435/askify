@@ -2,6 +2,7 @@
 import { Angry, Bot, House, Paperclip, Send, Trash } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 import { ChatHistory } from '../types'
+import MarkdownPreview from "@uiw/react-markdown-preview"
 export default function ChatBot() {
 
     const [chatHistory, setChatHistory] = useState<ChatHistory>([])
@@ -80,9 +81,10 @@ export default function ChatBot() {
                         addChatHistory(mode, response.response, perUserMessage)
                         setFileUploaded(false)
                         setUploadedFile('')
-                        // console.log('response:', response.response)
+                        console.log(response.response)
                     }
                 }}>
+
                     <div className='text-lg mt-5'>Choose AI Personality</div>
                     <div className='flex items-center justify-between gap-5 mt-3 select-none'>
                         <div className='w-1/3 flex'>
@@ -133,12 +135,15 @@ export default function ChatBot() {
                                 <div className='messageDiv flex flex-col gap-3 bg-[#F3F4F6] h-140 w-full mt-5 mb-5 rounded-lg p-5 overflow-y-scroll'>
                                     {
                                         chatHistory.map((blob, idx) => (
-                                            <div key={idx} className={blob.role === 'user' ? 'flex gap-3 items-center bg-[#DFE7FF] px-4 py-2 rounded-xl w-fit self-end max-w-5/6' : 'flex items-center gap-3 bg-white px-4 py-2 rounded-xl w-fit max-w-5/6'}>
-                                                <div className={`py-2 px-3 rounded-full flex items-center gap-2 ${blob.role === 'user' ? 'hidden' : 'bg-[#E4E7EB] font-medium'} ${blob.mode==='mom'? 'text-red-500': blob.mode==='monk' ? 'text-blue-500' : 'text-black'}`}>
+                                            <div key={idx} className={blob.role === 'user' ? 'flex gap-3 items-center bg-[#DFE7FF] px-4 py-2 rounded-xl w-fit self-end max-w-5/6' : 'flex items-start gap-3 bg-white p-4 rounded-xl w-fit max-w-5/6'}>
+                                                <div className={`py-2 px-3 rounded-full flex items-center gap-2 ${blob.role === 'user' ? 'hidden' : 'bg-[#E4E7EB] font-medium'} ${blob.mode === 'mom' ? 'text-red-500' : blob.mode === 'monk' ? 'text-blue-500' : 'text-black'}`}>
                                                     <div>{blob.role !== 'user' && blob.mode && emojis[blob.mode as keyof typeof emojis]}</div>
                                                     <div>{blob.role !== 'user' && blob.mode && (blob.mode.charAt(0).toUpperCase() + blob.mode.slice(1))}</div>
                                                 </div>
-                                                <div className='whitespace-pre-wrap'>{blob.message}</div>
+                                                {/* <div className='whitespace-pre-wrap'> */}
+                                                <div className=''>
+                                                    <MarkdownPreview style={{backgroundColor: 'transparent', color: 'black'}} source={blob.message} />
+                                                </div>
                                             </div>
                                         ))
                                     }
@@ -168,7 +173,7 @@ export default function ChatBot() {
                                 }}
                             />
                             <label htmlFor='fileUpload' className={`${fileUploaded ? 'bg-[#4941DA] text-white' : 'hover:bg-[#F3F4F6]'} cursor-pointer p-5 rounded-lg flex items-center justify-center`}>
-                                <Paperclip className='cursor-pointer' />
+                                <Paperclip strokeWidth={2.5} className='cursor-pointer' />
                             </label>
                         </div>
 
