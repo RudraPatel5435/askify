@@ -5,9 +5,9 @@ import { ChatHistory } from '../types'
 import MarkdownPreview from "@uiw/react-markdown-preview"
 export default function ChatBot() {
 
+    const [loading, setLoading] = useState<boolean>(false)
     const [chatHistory, setChatHistory] = useState<ChatHistory>([])
     const [userMessage, setUserMessage] = useState<string>('')
-    const [fileUploaded, setFileUploaded] = useState<boolean>(false)
     const [uploadedFile, setUploadedFile] = useState<string>('')
 
     const messageRef = useRef<HTMLDivElement>(null)
@@ -18,12 +18,13 @@ export default function ChatBot() {
         'normal': <Bot size={20} strokeWidth={2.5} />,
         'monk': <House strokeWidth={2.5} />
     }
-    const addChatHistory = (botType: 'mom' | 'monk' | 'normal' | null, botMess: string, userMess: string) => {
+    const addChatHistory = (botType: 'mom' | 'monk' | 'normal' | null, botMess: string, userMess: string, file?: FormDataEntryValue) => {
         setChatHistory(prev => [
             ...prev,
             {
                 role: 'user',
-                message: userMess
+                message: userMess,
+                file: file
             },
             {
                 role: 'bot',
@@ -57,10 +58,10 @@ export default function ChatBot() {
 
     return (
         <>
-            <div className='px-35 py-5'>
+            <div className='px-35 py-5 selection:bg-[#8e86ff]'>
                 <div className='flex items-center justify-between'>
                     <div className='font-semibold text-2xl'>Study Assistant</div>
-                    <button onClick={() => setChatHistory([])} className='flex items-center gap-3 border-2 border-[#4941DA] bg-[#5a53db] hover:bg-[#4941DA] px-4 py-2 rounded-lg text-white cursor-pointer'>
+                    <button onClick={() => setChatHistory([])} className='flex items-center gap-3 border-2 border-[#4941DA] bg-[#5046E5] hover:bg-[#4941DA] px-4 py-2 rounded-lg text-white cursor-pointer select-none'>
                         <Trash size={20} />
                         <span>Clear Chat</span>
                     </button>
@@ -68,20 +69,27 @@ export default function ChatBot() {
 
                 <form onSubmit={async (e) => {
                     e.preventDefault()
+                    if (loading) return
                     const formData = new FormData(e.currentTarget)
                     if (formData.get('message')) {
+                        setLoading(true)
                         const perUserMessage = userMessage
                         setUserMessage('')
+                        setUploadedFile('')
+                        formData.append('chatHistory', JSON.stringify(chatHistory))
+                        console.log(chatHistory)
                         const res = await fetch('/api/submit', {
                             method: "POST",
-                            body: formData,
+                            body: formData
                         })
                         const response = await res.json()
                         const mode = formData.get('modeOpt') as 'mom' | 'monk' | 'normal' | null
-                        addChatHistory(mode, response.response, perUserMessage)
-                        setFileUploaded(false)
-                        setUploadedFile('')
-                        console.log(response.response)
+                        const newFile = formData.get('fileUpload')
+                        if (newFile) addChatHistory(mode, response.response, perUserMessage, newFile)
+                        else addChatHistory(mode, response.response, perUserMessage)
+
+                        // console.log(response.response)
+                        setLoading(false)
                     }
                 }}>
 
@@ -112,7 +120,7 @@ export default function ChatBot() {
                             <label htmlFor='monkOpt' className='transform transition-transform duration-200 peer-checked:text-[#4F45E4] peer-checked:scale-103 peer-checked:border-[#4F45E4] peer-checked:bg-[#EEF2FF] bg-white border-1 border-borderp px-4 py-3 rounded-lg w-full hover:scale-103 cursor-pointer'>
                                 <div className='flex items-center justify-start gap-3'>
                                     <div className='p-2 bg-white rounded-full'><House /></div>
-                                    <div className='font-medium'>Monk (For Fun)</div>
+                                    <div className='font-medium'>Friend (For Fun)</div>
                                 </div>
                                 <div className='mt-2 text-sm text-texts'>Calm, wise, and philosophical</div>
                             </label>
@@ -136,17 +144,23 @@ export default function ChatBot() {
                                     {
                                         chatHistory.map((blob, idx) => (
                                             <div key={idx} className={blob.role === 'user' ? 'flex gap-3 items-center bg-[#DFE7FF] px-4 py-2 rounded-xl w-fit self-end max-w-5/6' : 'flex items-start gap-3 bg-white p-4 rounded-xl w-fit max-w-5/6'}>
-                                                <div className={`py-2 px-3 rounded-full flex items-center gap-2 ${blob.role === 'user' ? 'hidden' : 'bg-[#E4E7EB] font-medium'} ${blob.mode === 'mom' ? 'text-red-500' : blob.mode === 'monk' ? 'text-blue-500' : 'text-black'}`}>
+                                                <div className={`py-2 px-3 rounded-full flex items-center gap-2 select-none ${blob.role === 'user' ? 'hidden' : 'bg-[#E4E7EB] font-medium'} ${blob.mode === 'mom' ? 'text-red-500' : blob.mode === 'monk' ? 'text-blue-500' : 'text-black'}`}>
                                                     <div>{blob.role !== 'user' && blob.mode && emojis[blob.mode as keyof typeof emojis]}</div>
                                                     <div>{blob.role !== 'user' && blob.mode && (blob.mode.charAt(0).toUpperCase() + blob.mode.slice(1))}</div>
                                                 </div>
-                                                {/* <div className='whitespace-pre-wrap'> */}
-                                                <div className=''>
-                                                    <MarkdownPreview style={{backgroundColor: 'transparent', color: 'black'}} source={blob.message} />
-                                                </div>
+                                                <MarkdownPreview style={{ backgroundColor: 'transparent', color: 'black' }} source={blob.message} />
                                             </div>
                                         ))
                                     }
+                                    {loading && (
+                                        <div className='flex items-start gap-3 bg-white p-4 rounded-xl w-fit max-w-5/6 animate-pulse'>
+                                            <div className='py-2 px-3 rounded-full flex items-center gap-2 bg-[#E4E7EB] font-medium text-black'>
+                                                <Bot size={20} strokeWidth={2.5} />
+                                                <div>Bot</div>
+                                            </div>
+                                            <div className='text-gray-500 italic'>Typing...</div>
+                                        </div>
+                                    )}
                                     <div ref={messageRef} />
                                 </div>
                             )
@@ -163,22 +177,20 @@ export default function ChatBot() {
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     const file = e.target.files?.[0]
                                     if (file) {
-                                        setFileUploaded(true)
                                         setUploadedFile(file.name)
                                         // console.log(file)
                                     } else {
-                                        setFileUploaded(false)
                                         setUploadedFile('')
                                     }
                                 }}
                             />
-                            <label htmlFor='fileUpload' className={`${fileUploaded ? 'bg-[#4941DA] text-white' : 'hover:bg-[#F3F4F6]'} cursor-pointer p-5 rounded-lg flex items-center justify-center`}>
+                            <label htmlFor='fileUpload' className={`${uploadedFile.length !== 0 ? 'bg-[#4941DA] text-white' : 'hover:bg-[#F3F4F6]'} cursor-pointer p-5 rounded-lg flex items-center justify-center`}>
                                 <Paperclip strokeWidth={2.5} className='cursor-pointer' />
                             </label>
                         </div>
 
                         <div className='w-full flex flex-col gap-1'>
-                            <div className={`${fileUploaded ? 'px-2 py-1 rounded-md bg-zinc-200 w-fit ' : 'hidden'}`}>
+                            <div className={`${uploadedFile.length !== 0 ? 'px-2 py-1 rounded-md bg-zinc-200 w-fit ' : 'hidden'}`}>
                                 {uploadedFile}
                             </div>
                             <textarea
@@ -192,12 +204,13 @@ export default function ChatBot() {
                                     }
                                 }}
                                 name='message'
-                                placeholder='Type your message...'
+                                placeholder={loading ? 'Waiting for response...' : 'Type you message...'}
+                                // disabled={loading}
                                 rows={1}
                                 className='w-full px-4 py-2 rounded-md border border-[#D1D5DA] outline-[#4941DA] resize-none overflow-scroll leading-6'
                             ></textarea>
                         </div>
-                        <button type='submit' className={`${userMessage ? 'cursor-pointer bg-[#4F45E4]' : 'cursor-no-drop bg-[#4F45E4]/70'} text-white p-4 rounded-lg`}>
+                        <button type='submit' disabled={loading || !userMessage} className={`${userMessage && !loading ? 'cursor-pointer bg-[#4F45E4]' : 'cursor-not-allowed bg-[#4F45E4]/70'} text-white p-4 rounded-lg`}>
                             <Send />
                         </button>
                     </div>
