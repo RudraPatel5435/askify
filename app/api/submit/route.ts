@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     try {
       parsedHistory = JSON.parse(historyRaw);
     } catch (err) {
-      console.warn("Invalid chatHistory JSON", historyRaw);
+      console.warn("Invalid chatHistory JSON", err);
     }
 
     const historyContent = parsedHistory.map((item) => ({
