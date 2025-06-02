@@ -5,3 +5,8 @@ export interface ChatEntry {
     message: string,
 }
 export type ChatHistory = ChatEntry[]
+
+export type ChatMessage = {
+    role: 'user' | 'model';
+    message: string;
+}

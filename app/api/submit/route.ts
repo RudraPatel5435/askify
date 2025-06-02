@@ -1,4 +1,5 @@
 'use server'
+import { ChatMessage } from "@/app/types";
 import { GoogleGenAI } from "@google/genai"
 import { NextResponse } from "next/server"
 
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
     const file = formData.get("fileUpload");
     const historyRaw = formData.get("chatHistory")?.toString() || "[]";
 
-    let parsedHistory: any[] = [];
+    let parsedHistory: ChatMessage[] = [];
     try {
       parsedHistory = JSON.parse(historyRaw);
     } catch (err) {
